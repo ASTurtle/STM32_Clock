@@ -52,6 +52,7 @@
 uint8_t show_data[4]={0};
 uint8_t tim1_flag=0,clk_s=0,change_flag=0;;
 uint8_t state=0;
+uint8_t index=0;
 extern struct TIMEData TimeData;
 /* USER CODE END PV */
 
@@ -96,9 +97,10 @@ int main(void)
   MX_GPIO_Init();
   MX_ADC1_Init();
   MX_TIM1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   
-  HAL_TIM_Base_Start_IT(&htim1);
+
      delay_init(72);
 //     ds1302_init();  
     delay_ms(5);
@@ -110,6 +112,8 @@ int main(void)
      show_data[0]=TimeData.hour/10+0x30;
      
      delay_ms(5);
+       HAL_TIM_Base_Start_IT(&htim1);
+  HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -133,15 +137,18 @@ int main(void)
 //       show_num(2,'2');
 //       show_num(3,'3');
 //       show_num(4,'4');
+       
+       
+       
+       
      switch(state){
           case 0:  
-               ds1302_read_realTime();    //读取此时时刻
+//               ds1302_read_realTime();    //读取此时时刻
                if(min==TimeData.minute)//判断分钟数是否有更新
                {
-                  delay_ms(5);//没有更新便延时5ms
+//                  delay_ms(5);//没有更新便延时5ms
                }
-               else{
-                    
+               else{                    
                     min=TimeData.minute;//分钟数有更新，则将变量min更新
                     show_data[3]=TimeData.minute%10+0x30;
                     show_data[2]=TimeData.minute/10+0x30;
@@ -150,9 +157,7 @@ int main(void)
                     
 
                    }
-              for(int i=0;i<4;i++){
-                  show_num(i+1,show_data[i]);
-              }
+           
           break;
           case 1:
               if(tim1_flag){
@@ -195,9 +200,11 @@ int main(void)
                
           break;
     }
-     for(int i=0;i<4;i++){
-         show_num(i+1,show_data[i]);
-     }
+     
+//                   show_num(1,show_data[0]);
+//                   show_num(2,show_data[1]);
+//                   show_num(3,show_data[2]);
+//                   show_num(4,show_data[3]);
 
        
   }
@@ -251,6 +258,19 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(htim);
+   if(htim==&htim2){
+          ds1302_read_realTime();    //读取此时时刻
+        index=(index+1)%4;
+        show_num(index+1,show_data[index]);
+   
+   }
+
+}
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {

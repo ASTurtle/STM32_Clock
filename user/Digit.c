@@ -2,6 +2,12 @@
 #include "Digit.h"
 
 
+void my_delay_ms(int t){
+     for(int i=0;i<t;i++)
+        for(int j=0;j<72;j++)
+           for(int k=0;k<1000;k++);
+
+}
 
 extern uint8_t tim1_flag,clk_s;
 /**
@@ -57,8 +63,8 @@ void show_num(uint8_t bit,uint8_t num){
              HAL_GPIO_WritePin(DP_GPIO_Port,DP_Pin,GPIO_PIN_SET);
            break;
           }
-     HAL_Delay(1);
-     
+//     HAL_Delay(1);
+     delay_ms(1);
 
      
      
@@ -346,7 +352,8 @@ void show_num(uint8_t bit,uint8_t num){
           }  
      
      }
-     HAL_Delay(1);
+//     HAL_Delay(1);
+      delay_ms(1);
      HAL_GPIO_WritePin(A_GPIO_Port,A_Pin,GPIO_PIN_SET);
                     HAL_GPIO_WritePin(B_GPIO_Port,B_Pin,GPIO_PIN_SET);
                     HAL_GPIO_WritePin(C_GPIO_Port,C_Pin,GPIO_PIN_SET);
