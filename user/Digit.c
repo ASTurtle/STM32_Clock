@@ -9,7 +9,7 @@ void my_delay_ms(int t){
 
 }
 
-extern uint8_t tim1_flag,clk_s;
+extern uint8_t tim1_flag,clk_s,isAlarmOn;
 /**
   * @brief  对四个数码管中指定的一个显示指定数字（字母）
   *
@@ -32,7 +32,7 @@ void show_num(uint8_t bit,uint8_t num){
              HAL_GPIO_WritePin(COM2_GPIO_Port,COM2_Pin,GPIO_PIN_SET);
              HAL_GPIO_WritePin(COM3_GPIO_Port,COM3_Pin,GPIO_PIN_SET);
              HAL_GPIO_WritePin(COM4_GPIO_Port,COM4_Pin,GPIO_PIN_SET);
-             HAL_GPIO_WritePin(DP_GPIO_Port,DP_Pin,GPIO_PIN_SET);
+             HAL_GPIO_WritePin(DP_GPIO_Port,DP_Pin,!isAlarmOn);
            break;
            case 3:
              HAL_GPIO_WritePin(COM2_GPIO_Port,COM2_Pin,GPIO_PIN_RESET);
@@ -63,8 +63,9 @@ void show_num(uint8_t bit,uint8_t num){
              HAL_GPIO_WritePin(DP_GPIO_Port,DP_Pin,GPIO_PIN_SET);
            break;
           }
-//     HAL_Delay(1);
-     delay_ms(1);
+
+     delay_us(DELAY);
+//          delay_ms(1);
 
      
      
@@ -352,8 +353,8 @@ void show_num(uint8_t bit,uint8_t num){
           }  
      
      }
-//     HAL_Delay(1);
-      delay_ms(1);
+//      delay_ms(1);
+     delay_us(DELAY);
      HAL_GPIO_WritePin(A_GPIO_Port,A_Pin,GPIO_PIN_SET);
                     HAL_GPIO_WritePin(B_GPIO_Port,B_Pin,GPIO_PIN_SET);
                     HAL_GPIO_WritePin(C_GPIO_Port,C_Pin,GPIO_PIN_SET);

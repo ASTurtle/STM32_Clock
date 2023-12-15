@@ -50,10 +50,12 @@
 /* USER CODE BEGIN PV */
 
 uint8_t show_data[4]={0};
-uint8_t tim1_flag=0,clk_s=0,change_flag=0;;
-uint8_t state=0;
+uint8_t tim1_flag=0,clk_s=0,change_flag=0,isBeep=0,isAlarm=0,isAlarmOn=0;
+uint8_t state=0,state_changed=0,isSettingAlarm=0;
 uint8_t index=0;
 extern struct TIMEData TimeData;
+uint8_t set_minute=0,set_hour=0;
+uint8_t alarm_hour=0,alarm_minute=0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -125,81 +127,135 @@ int main(void)
     /* USER CODE BEGIN 3 */
 //       HAL_Delay(1000);
 //       HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
-       
-//       if(tim1_flag){
-//          tim1_flag=0;
-//       
-//       }
-
-       
-
-//      show_num(1,'1');
-//       show_num(2,'2');
-//       show_num(3,'3');
-//       show_num(4,'4');
-       
-       
-       
+       if(state_changed){
+            state_changed=0;
+//            isBeep=1;
+            set_minute=TimeData.minute;
+            set_hour=TimeData.hour;    
+       }
+       if(isAlarm) state=7;
        
      switch(state){
           case 0:  
-//               ds1302_read_realTime();    //读取此时时刻
-               if(min==TimeData.minute)//判断分钟数是否有更新
-               {
-//                  delay_ms(5);//没有更新便延时5ms
-               }
-               else{                    
-                    min=TimeData.minute;//分钟数有更新，则将变量min更新
+
                     show_data[3]=TimeData.minute%10+0x30;
                     show_data[2]=TimeData.minute/10+0x30;
                     show_data[1]=TimeData.hour%10+0x30;
-                    show_data[0]=TimeData.hour/10+0x30;
-                    
-
-                   }
+                    show_data[0]=TimeData.hour/10+0x30;      //state 0  显示当前时间
            
           break;
-          case 1:
+          case 1:                                        // state1 校准小时
+               
               if(tim1_flag){
-                   show_data[1]=TimeData.hour%10+0x30;
-                    show_data[0]=TimeData.hour/10+0x30;
+                    show_data[3]=TimeData.minute%10+0x30;
+                    show_data[2]=TimeData.minute/10+0x30;
+                   show_data[1]=set_hour%10+0x30;
+                    show_data[0]=set_hour/10+0x30;
               } 
               else {
+                   show_data[3]=TimeData.minute%10+0x30;
+                    show_data[2]=TimeData.minute/10+0x30;
                   show_data[1]=0;
                     show_data[0]=0;
               
               }
-              if(change_flag==1) TimeData.hour=(TimeData.hour+1)%24;
+              if(change_flag==1) set_hour=(set_hour+1)%24;
               else  if(change_flag==2) {
-                   TimeData.hour=(TimeData.hour==0)?(23):(TimeData.hour-1);
+                   set_hour=(set_hour==0)?(23):(set_hour-1);
                    
               }
               change_flag=0;
               
-              ds1302_write_time(TimeData.hour,TimeData.minute);
+              ds1302_write_time(set_hour,TimeData.minute);
               
           break;
-          case 2:
+          case 2:                             //state2 校准分钟
                if(tim1_flag){
-                   show_data[3]=TimeData.minute%10+0x30;
-                    show_data[2]=TimeData.minute/10+0x30;
+                    show_data[1]=TimeData.hour%10+0x30;
+                    show_data[0]=TimeData.hour/10+0x30;
+                   show_data[3]=set_minute%10+0x30;
+                    show_data[2]=set_minute/10+0x30;
               } 
               else {
+                   show_data[1]=TimeData.hour%10+0x30;
+                    show_data[0]=TimeData.hour/10+0x30;
                   show_data[3]=0;
                     show_data[2]=0;
               
               }
-              if(change_flag==1) TimeData.minute=(TimeData.minute+1)%60;
+              if(change_flag==1) set_minute=(set_minute+1)%60;
               else  if(change_flag==2) {
-                   TimeData.minute=(TimeData.minute==0)?(59):(TimeData.minute-1);
+                   set_minute=(set_minute==0)?(59):(set_minute-1);
                    
               }
               change_flag=0;
               
-              ds1302_write_time(TimeData.hour,TimeData.minute);
+              ds1302_write_time(TimeData.hour,set_minute);
                
           break;
+          case 4:
+               if(tim1_flag){
+                    show_data[3]=TimeData.minute%10+0x30;
+                    show_data[2]=TimeData.minute/10+0x30;
+                   show_data[1]=alarm_hour%10+0x30;
+                    show_data[0]=alarm_hour/10+0x30;
+              } 
+              else {
+                   show_data[3]=TimeData.minute%10+0x30;
+                    show_data[2]=TimeData.minute/10+0x30;
+                  show_data[1]=0;
+                    show_data[0]=0;
+              
+              }
+              if(change_flag==1) alarm_hour=(alarm_hour+1)%24;
+              else  if(change_flag==2) {
+                   alarm_hour=(alarm_hour==0)?(23):(alarm_hour-1);
+                   
+              }
+              change_flag=0;
+          break;
+          case 5:
+                if(tim1_flag){
+                    show_data[1]=TimeData.hour%10+0x30;
+                    show_data[0]=TimeData.hour/10+0x30;
+                   show_data[3]=alarm_minute%10+0x30;
+                    show_data[2]=alarm_minute/10+0x30;
+              } 
+              else {
+                   show_data[1]=TimeData.hour%10+0x30;
+                    show_data[0]=TimeData.hour/10+0x30;
+                  show_data[3]=0;
+                    show_data[2]=0;
+              
+              }
+              if(change_flag==1) alarm_minute=(alarm_minute+1)%60;
+              else  if(change_flag==2) {
+                   alarm_minute=(alarm_minute==0)?(59):(alarm_minute-1);
+                   
+              }
+              change_flag=0;
+          break;
+              
+          case 7:
+              if(tim1_flag){
+                    show_data[1]=TimeData.hour%10+0x30;
+                    show_data[0]=TimeData.hour/10+0x30;
+                   show_data[3]=TimeData.minute%10+0x30;
+                    show_data[2]=TimeData.minute/10+0x30;
+              } 
+              else {
+                   show_data[1]=0;
+                    show_data[0]=0;
+                  show_data[3]=0;
+                    show_data[2]=0;
+              
+              }
+              isBeep=8;
+              if(!isAlarm) state=0;
+          break;
     }
+     
+    
      
 //                   show_num(1,show_data[0]);
 //                   show_num(2,show_data[1]);
@@ -267,6 +323,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
           ds1302_read_realTime();    //读取此时时刻
         index=(index+1)%4;
         show_num(index+1,show_data[index]);
+        if(isAlarmOn&&TimeData.hour==alarm_hour&&TimeData.minute==alarm_minute) isAlarm=1;
+        if(isBeep){
+          
+          HAL_GPIO_WritePin(BEEP_GPIO_Port,BEEP_Pin,GPIO_PIN_SET);
+             isBeep=isBeep-1;
+        }
+        else HAL_GPIO_WritePin(BEEP_GPIO_Port,BEEP_Pin,GPIO_PIN_RESET);
    
    }
 
@@ -277,18 +340,43 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   /* Prevent unused argument(s) compilation warning */
   UNUSED(GPIO_Pin);
    if(GPIO_Pin==KEY1_Pin){
+        delay_ms(10);
+        if(HAL_GPIO_ReadPin(KEY1_GPIO_Port,KEY1_Pin)==GPIO_PIN_RESET){
       state++;
-        state%=3;
+        if(state==3||state==6) state=0;
+        state_changed=1;
+        isBeep=1;
+             
+        }     
    
    }
    if(GPIO_Pin==KEY2_Pin){
+                delay_ms(10);
+        if(HAL_GPIO_ReadPin(KEY2_GPIO_Port,KEY2_Pin)==GPIO_PIN_RESET){
         if(state!=0)  
              change_flag=1;  //加
+        else {
+          state=4;
+          state_changed=1;
+          isBeep=5;
+        }
+   }
    
    }
    if(GPIO_Pin==KEY0_Pin){
-        if(state!=0) 
-          change_flag=2;   //减
+                delay_ms(10);
+        if(HAL_GPIO_ReadPin(KEY0_GPIO_Port,KEY0_Pin)==GPIO_PIN_RESET){
+        
+        if(state==7){
+          isAlarm=0;
+          isAlarmOn=0;
+        } 
+        else if (state==0){
+          isAlarmOn=!isAlarmOn;
+        
+        } else  change_flag=2;   //减
+
+   }
    
    }
    
